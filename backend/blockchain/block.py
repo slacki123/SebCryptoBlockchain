@@ -1,6 +1,13 @@
 import time
 from backend.util.crypto_hash import crypto_hash
 
+GENESIS_DATA = {
+    'timestamp': 1,
+    'last_hash': 'genesis_last_hash',
+    'hash': 'genesis_hash',
+    'data': 'genesis_data'
+}
+
 class Block:
     """
     Unit of storage.
@@ -38,11 +45,10 @@ class Block:
     @staticmethod
     def genesis():
         """
-        Generate the genesis block
+        Unpack entire GENESIS_DATA dict as the genesis block
         :return: genesis Block
         """
-
-        return Block(1, 'genesis_last', 'genesis_hash', 'genesis_data')
+        return Block(**GENESIS_DATA)
 
 
 def main():
