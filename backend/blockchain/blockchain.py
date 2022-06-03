@@ -39,7 +39,12 @@ class Blockchain:
         # Finally, replace the current chain with the incoming chain
         self.chain = chain
 
-
+    def to_json(self):
+        """
+        Serialise the blockchain into a list of blocks
+        :return:
+        """
+        return list(map(lambda block: block.to_json(), self.chain))
 
     @staticmethod
     def is_valid_chain(chain):

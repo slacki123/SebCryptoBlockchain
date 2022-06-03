@@ -104,6 +104,12 @@ class Block:
         if block.hash != reconstructed_hash:
             raise Exception("The reconstructed hash is not correct!")
 
+    def to_json(self):
+        """
+        Serialise the block into a dictionary of its attributes
+        :return:
+        """
+        return self.__dict__
 
     @staticmethod
     def genesis():
@@ -112,6 +118,7 @@ class Block:
         :return: genesis Block
         """
         return Block(**GENESIS_DATA)
+
 
 
 def main():

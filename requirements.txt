@@ -1,1 +1,3 @@
 pytest==7.1.2
+flask==2.1.2
+pubnub==6.3.2
