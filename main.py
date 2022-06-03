@@ -1,4 +1,4 @@
-from blockchain import Blockchain
+from backend.blockchain.blockchain import Blockchain
 
 if __name__ == '__main__':
     foo_blockchain = Blockchain()
