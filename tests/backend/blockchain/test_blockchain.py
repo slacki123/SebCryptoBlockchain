@@ -1,3 +1,5 @@
+import pytest
+
 from backend.blockchain.block import GENESIS_DATA, Block
 from backend.blockchain.blockchain import Blockchain
 
@@ -19,3 +21,40 @@ def test_add_block_adds_new_block_with_expected_data():
     assert len(blockchain.chain) == 2
     assert last_block.data == data
     assert last_block.last_hash == initial_hash
+
+
+@pytest.fixture
+def blockchain_three_blocks():
+    blockchain = Blockchain()
+
+    for i in range(3):
+        blockchain.add_block(i)
+
+    return blockchain
+
+
+def test_is_valid_chain_when_all_blocks_valid_then_does_not_throw(blockchain_three_blocks):
+    Blockchain.is_valid_chain(blockchain_three_blocks.chain)
+
+
+def test_is_valid_chain_when_genesis_block_invalid_then_throws(blockchain_three_blocks):
+    blockchain_three_blocks.chain[0].hash = 'some_evil_hash'
+
+    with pytest.raises(Exception, match='The genesis block must be valid'):
+        Blockchain.is_valid_chain(blockchain_three_blocks.chain)
+
+
+def test_is_valid_chain_when_last_block_is_invalid_then_throws(blockchain_three_blocks):
+    blockchain_three_blocks.chain[-1].nonce = 'some_evil_nonce'
+
+    with pytest.raises(Exception, match='The reconstructed hash is not correct!'):
+        Blockchain.is_valid_chain(blockchain_three_blocks.chain)
+
+
+def test_is_valid_chain_when_all_blocks_are_invalid_then_throws(blockchain_three_blocks):
+    for i in range(1, len(blockchain_three_blocks.chain)):
+        blockchain_three_blocks.chain[i].nonce = "some_evil_nonce"
+
+    with pytest.raises(Exception, match='The reconstructed hash is not correct!'):
+        Blockchain.is_valid_chain(blockchain_three_blocks.chain)
+

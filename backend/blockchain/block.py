@@ -75,6 +75,37 @@ class Block:
         return last_block.difficulty - 1 if last_block.difficulty > 1 else 1  # ensure this value does not go negative
 
     @staticmethod
+    def is_valid_block(last_block, block):
+        """
+        Validate a block by enforcing the following rules:
+        1. The block must have the proper last_hash reference
+        2. The block must meet the proof of work requirement - must have the proper number of leading 0's based on difficulty
+        3. Difficulty must only adjust by 1 from the previous block
+        4. Block hash must be a valid combination of the block fields - proves no attacker has changed the chain
+        :param last_block:
+        :param block:
+        """
+
+        if block.last_hash != last_block.hash:
+            raise Exception("The block last_hash must be the same as the hash of the previous block!")
+
+        if hex_to_binary(block.hash)[0:block.difficulty] != '0' * block.difficulty:
+            raise Exception("The proof of work requirement was not met! Number of leading zeroes do not match difficulty")
+
+        if abs(last_block.difficulty - block.difficulty) > 1:
+            raise Exception("The block difficulty must only adjust by 1")
+
+        reconstructed_hash = crypto_hash(
+            block.timestamp,
+            block.last_hash,
+            block.nonce,
+            block.difficulty
+        )
+        if block.hash != reconstructed_hash:
+            raise Exception("The reconstructed hash is not correct!")
+
+
+    @staticmethod
     def genesis():
         """
         Unpack entire GENESIS_DATA dict as the genesis block
@@ -84,9 +115,11 @@ class Block:
 
 
 def main():
-    last_block = Block.genesis()
-    block = Block.mine_block(last_block, 'somedata')
-    print(block)
+    genesis_block = Block.genesis()
+    bad_block = Block.mine_block(genesis_block, 'bla')
+    bad_block.last_hash = 'evil_data'
+
+    Block.is_valid_block(genesis_block, bad_block)
 
 
 if __name__ == '__main__':

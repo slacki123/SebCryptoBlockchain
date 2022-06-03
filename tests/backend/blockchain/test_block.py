@@ -1,5 +1,7 @@
 import time
 
+import pytest
+
 from backend.blockchain.block import Block, GENESIS_DATA
 from backend.config import MINE_RATE, SECONDS
 from backend.util.hex_to_binary import hex_to_binary
@@ -63,4 +65,58 @@ def test_mined_block_difficulty_is_limited_at_lowest_value_when_too_slow():
 
 def test_mined_block_time_converges_at_steady_value_related_to_mine_rate():
     pass
+
+
+def test_is_valid_block_when_block_is_valid_does_not_throw():
+    last_block = Block.genesis()
+    block = Block.mine_block(last_block, 'test_data')
+    Block.is_valid_block(last_block, block)
+
+
+def test_is_valid_block_when_block_last_hash_is_invalid_then_throws():
+    last_block = Block.genesis()
+    block = Block.mine_block(last_block, 'test_data')
+    block.last_hash = 'evil_last_hash'
+
+    with pytest.raises(Exception, match="The block last_hash must be the same as the hash of the previous block!"):
+        Block.is_valid_block(last_block, block)
+
+
+def test_is_valid_block_when_block_hash_is_incorrectly_constructed_then_throws():
+    last_block = Block.genesis()
+    block = Block.mine_block(last_block, 'test_data')
+    block.nonce = 'some_evil_nonce'
+
+    with pytest.raises(Exception, match="The reconstructed hash is not correct!"):
+        Block.is_valid_block(last_block, block)
+
+
+def test_is_valid_block_when_block_hash_is_incorrect_then_throws():
+    last_block = Block.genesis()
+    block = Block.mine_block(last_block, 'test_data')
+    block.hash = '0000000001234bbbaaa'
+
+    with pytest.raises(Exception, match="The reconstructed hash is not correct!"):
+        Block.is_valid_block(last_block, block)
+
+
+def test_is_valid_block_proof_of_work_requirement_not_met_then_throws():
+    last_block = Block.genesis()
+    block = Block.mine_block(last_block, 'test_data')
+    block.hash = 'fff'
+
+    with pytest.raises(Exception, match="The proof of work requirement was not met.*"):
+        Block.is_valid_block(last_block, block)
+
+
+def test_is_valid_block_when_difficulty_is_not_adjusted_by_1_then_throws():
+    last_block = Block.genesis()
+    block = Block.mine_block(last_block, 'test_data')
+    jumped_difficulty = 10
+    block.hash = f'{"0" * (jumped_difficulty + last_block.difficulty)}'
+    block.difficulty = last_block.difficulty + jumped_difficulty
+
+    with pytest.raises(Exception, match="The block difficulty must only adjust by 1"):
+        Block.is_valid_block(last_block, block)
+
 
