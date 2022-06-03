@@ -58,3 +58,26 @@ def test_is_valid_chain_when_all_blocks_are_invalid_then_throws(blockchain_three
     with pytest.raises(Exception, match='The reconstructed hash is not correct!'):
         Blockchain.is_valid_chain(blockchain_three_blocks.chain)
 
+
+def test_replace_chain_when_chain_valid_then_replaces_correctly(blockchain_three_blocks):
+    current_blockchain = Blockchain()
+    current_blockchain.replace_chain(blockchain_three_blocks.chain)
+
+    assert current_blockchain.chain == blockchain_three_blocks.chain
+
+
+def test_replace_chain_when_incoming_chain_is_shorter_then_throws(blockchain_three_blocks):
+    new_incoming_chain = Blockchain()
+
+    with pytest.raises(Exception, match="The incoming chain must be longer"):
+        blockchain_three_blocks.replace_chain(new_incoming_chain.chain)
+
+
+def test_replace_chain_when_chain_is_invalid_then_throws(blockchain_three_blocks):
+    blockchain = Blockchain()
+    blockchain_three_blocks.chain[1].hash = 'evil_hash'
+
+    with pytest.raises(Exception, match='The incoming chain is invalid'):
+        blockchain.replace_chain(blockchain_three_blocks.chain)
+
+
