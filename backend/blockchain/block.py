@@ -112,6 +112,15 @@ class Block:
         return self.__dict__
 
     @staticmethod
+    def from_json(block_json):
+        """
+        Deserialize a block's json representation back into the instance
+        :param block_json:
+        :return:
+        """
+        return Block(**block_json)
+
+    @staticmethod
     def genesis():
         """
         Unpack entire GENESIS_DATA dict as the genesis block
