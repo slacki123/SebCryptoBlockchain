@@ -62,9 +62,27 @@ def test_transaction_update_when_update_values_with_multiple_recipients_valid_up
     assert Wallet.verify(transaction.input['public_key'], transaction.output, transaction.input['signature'])
 
 
+def test_is_valid_transaction_when_is_valid_does_not_throw():
+    Transaction.is_valid_transaction(Transaction(Wallet(), 'recipient', 100))
 
 
+def test_is_valid_transaction_when_invalid_outputs_throws_exception():
+    sender_wallet = Wallet()
+    transaction = Transaction(sender_wallet, 'recipient', 50)
+    transaction.output[sender_wallet.address] = 1000  # evil attempt to add more money to the transaction
 
+    with pytest.raises(Exception, match="Invalid transaction output values"):
+        Transaction.is_valid_transaction(transaction)
+
+
+def test_is_valid_transaction_when_signature_has_been_tampered_with_then_raises_exception():
+    sender_wallet = Wallet()
+    some_evil_wallet = Wallet()
+    transaction = Transaction(sender_wallet, 'recipient', 50)
+    transaction.input['signature'] = some_evil_wallet.sign(transaction.output)
+
+    with pytest.raises(Exception, match="Invalid transaction signature"):
+        Transaction.is_valid_transaction(transaction)
 
 
 

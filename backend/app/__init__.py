@@ -2,13 +2,17 @@ import os
 import random
 
 import requests
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from backend.blockchain.blockchain import Blockchain
 from backend.pubsub import PubSub
+from backend.wallet.transaction import Transaction
+from backend.wallet.wallet import Wallet
 
 app = Flask(__name__)
 blockchain = Blockchain()  # Does this come from a database? Right now it's all in memory
+wallet = Wallet()
 pubsub = PubSub(blockchain)
+
 
 @app.route('/')
 def route_default():
@@ -31,6 +35,13 @@ def route_blockchain_mine():
     pubsub.broadcast_block(resulting_block)
 
     return jsonify(resulting_block.to_json())
+
+
+@app.route('/wallet/transact', methods=['POST'])
+def route_wallet_transact():
+    transaction_data = request.get_json()
+    transaction = Transaction(wallet, transaction_data['recipient'], transaction_data['amount'])
+    return jsonify(transaction.to_json())
 
 
 ROOT_PORT = 5000

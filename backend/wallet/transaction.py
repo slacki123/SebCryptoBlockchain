@@ -78,6 +78,34 @@ class Transaction:
         # Update the signed input that will go onto the blockchain
         self.input = self.create_input(sender_wallet, self.output)
 
+    @staticmethod
+    def is_valid_transaction(transaction):
+        """
+        Validate a transaction
+        Raise exception if transaction is invalid
+        :param transaction:
+        :raise: Exception
+        """
+        output_total = sum(transaction.output.values())
+
+        if transaction.input['amount'] != output_total:
+            raise Exception("Invalid transaction output values")
+
+        if not Wallet.verify(
+            transaction.input['public_key'],
+            transaction.output,
+            transaction.input['signature']
+        ):
+            raise Exception("Invalid transaction signature")
+
+    def to_json(self):
+        """
+        Converts a transaction instance to a json
+        :return:
+        """
+        return self.__dict__
+
+
 
 def main():
     wallet = Wallet()

@@ -4,7 +4,8 @@ import uuid
 from backend.config import STARTING_BALANCE
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec  # Elliptic curve key value pairing
-from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric.utils import encode_dss_signature, decode_dss_signature
+from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.exceptions import InvalidSignature
 
 
@@ -21,7 +22,7 @@ class Wallet:
             ec.SECP256K1(),
             default_backend()
         )  # same standard as BTC
-        self.public_key: ec.EllipticCurvePublicKey = self.private_key.public_key()
+        self.public_key: str = self.serialize_public_key()
 
     def sign(self, data):
         """
@@ -30,10 +31,22 @@ class Wallet:
         :return: signed object with the local privvate key
         """
         encoded_data = json.dumps(data).encode('utf-8')
-        return self.private_key.sign(encoded_data, ec.ECDSA(hashes.SHA256()))  # Elliptic curve signing algorithm
+        private_key = self.private_key.sign(encoded_data, ec.ECDSA(hashes.SHA256()))  # Elliptic curve signing algorithm
+        return decode_dss_signature(private_key)
+
+    def serialize_public_key(self):
+        """
+        Reset the public key to it's serialized version so that it is jsonable
+        :return:
+        """
+        public_key = self.private_key.public_key().public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        ).decode('utf-8')
+        return public_key
 
     @staticmethod
-    def verify(public_key: ec.EllipticCurvePublicKey, data: any, signature: bytes) -> bool:
+    def verify(public_key: str, data: any, signature: tuple[int, int]) -> bool:
         """
         Verify a signature based on the original public key
         :param public_key:
@@ -41,10 +54,17 @@ class Wallet:
         :param signature:
         :return:
         """
+        deserialized_public_key = serialization.load_pem_public_key(
+            public_key.encode('utf-8'),
+            default_backend()
+        )
+        (r, s) = signature # elliptic curve coordinates
+        encoded_signature = encode_dss_signature(r, s)
+
         encoded_data = json.dumps(data).encode('utf-8')
         sha_256_hash = ec.ECDSA(hashes.SHA256())
         try:
-            public_key.verify(signature, encoded_data, sha_256_hash)
+            deserialized_public_key.verify(encoded_signature, encoded_data, sha_256_hash)
             return True
         except InvalidSignature as e:
             return False
@@ -63,6 +83,7 @@ def main():
 
     should_be_invalid = wallet.verify(Wallet().public_key, data, signed_data)
     print(f'Should be invalid: {should_be_invalid}')
+
 
 
 if __name__ == '__main__':
