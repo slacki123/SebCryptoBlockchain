@@ -41,11 +41,14 @@ if os.environ.get("PEER"):
 
     # All peers that are connecting should be able to see the current state of the blockchain
     result = requests.get(f'http://localhost:{ROOT_PORT}/blockchain')
-    print(f'Result: {result.json()}')
+    print(f'Result blockchain on the main APP node: {result.json()}')
     result_blockchain = Blockchain.from_json(result.json())
 
+    # The connected peers should be able to replace the existing chain with their own chain on their own machine
+    # Which is contained by the 'Blockchain' instance
+    # As a result, the node that just has connected, should be synchronised with the remaining chains on the network
     try:
-        blockchain.replace_chain(result_blockchain)
+        blockchain.replace_chain(result_blockchain.chain)
         print(f'\n -- Successfully synced the new chain')
     except Exception as e:
         print(f'\n -- Error synchronising the new chain: {e}')

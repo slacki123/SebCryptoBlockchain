@@ -60,7 +60,6 @@ class Blockchain:
         return blockchain
 
 
-
     @staticmethod
     def is_valid_chain(chain):
         """

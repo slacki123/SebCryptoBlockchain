@@ -29,7 +29,7 @@ class Listener(SubscribeCallback):
         if message_object.channel == CHANNELS['BLOCK']:
             block: dict = message_object.message
             potential_chain = self.blockchain.chain[:]  # make an exact copy of the existing blockchain list
-            potential_chain.append(Block.from_json(block)) # The block must be a valid block instance
+            potential_chain.append(Block.from_json(block))  # The block must be a valid block instance
 
             try:
                 self.blockchain.replace_chain(potential_chain)
@@ -54,7 +54,7 @@ class PubSub:
         Method that takes care of publish message to the channel
         :return:
         """
-        self.pubnub.publish().channel(channel).message(message).sync()
+        self.pubnub.publish().channel(channel).message(message).sync() # message method here is overloaded above
 
     def broadcast_block(self, block):
         """
