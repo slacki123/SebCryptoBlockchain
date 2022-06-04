@@ -9,14 +9,22 @@ class Transaction:
     Document of an exchange of currency, from a sender to one or more recipients
     """
 
-    def __init__(self, sender_wallet: Wallet, recipient, amount):
-        self.id = str(uuid.uuid4())[0:8]
-        self.output = self.create_output(
+    def __init__(  # terrible none assignment
+            self,
+            sender_wallet: Wallet = None,
+            recipient=None,
+            amount=None,
+            id=None,
+            output=None,
+            input=None
+    ):
+        self.id = id or str(uuid.uuid4())[0:8]
+        self.output = output or self.create_output(
             sender_wallet,
             recipient,
             amount
         )
-        self.input = self.create_input(sender_wallet, self.output)
+        self.input = input or self.create_input(sender_wallet, self.output)
 
     @staticmethod
     def create_output(sender_wallet: Wallet, recipient, amount) -> dict:
@@ -92,9 +100,9 @@ class Transaction:
             raise Exception("Invalid transaction output values")
 
         if not Wallet.verify(
-            transaction.input['public_key'],
-            transaction.output,
-            transaction.input['signature']
+                transaction.input['public_key'],
+                transaction.output,
+                transaction.input['signature']
         ):
             raise Exception("Invalid transaction signature")
 
@@ -105,6 +113,14 @@ class Transaction:
         """
         return self.__dict__
 
+    @staticmethod
+    def from_json(transaction_json):
+        """
+        Deserialise json back into a transaction instance
+        :param transaction_json:
+        :return:
+        """
+        return Transaction(**transaction_json)
 
 
 def main():
@@ -115,6 +131,10 @@ def main():
     transaction.update(wallet, 'new_recipient', 23)
 
     print(f'Updated txn: {transaction.__dict__}')
+
+    txn_json = transaction.to_json()
+    txn_restored = Transaction.from_json(txn_json)
+    print(f'Txn restored from json: {txn_restored.__dict__}')
 
 
 if __name__ == '__main__':
