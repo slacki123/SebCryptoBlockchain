@@ -2,3 +2,4 @@ pytest==7.1.2
 flask==2.1.2
 pubnub==6.3.2
 requests==2.27.1
+cryptography==37.0.2
