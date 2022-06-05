@@ -3,6 +3,7 @@ import random
 
 import requests
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 from backend.blockchain.blockchain import Blockchain
 from backend.pubsub import PubSub
 from backend.wallet.transaction import Transaction
@@ -10,6 +11,7 @@ from backend.wallet.transaction_pool import TransactionPool
 from backend.wallet.wallet import Wallet
 
 app = Flask(__name__)
+CORS(app, resources={r'/*': {'origins': 'http://localhost:3000'}})
 blockchain = Blockchain()  # Does this come from a database? Right now it's all in memory
 transaction_pool = TransactionPool()
 wallet = Wallet(blockchain)
@@ -24,6 +26,20 @@ def route_default():
 @app.route('/blockchain')
 def route_blockchain():
     return jsonify(blockchain.to_json())
+
+
+@app.route('/blockchain/range')
+def route_blockchain_range():
+    # http://localhost:5000/blockchain/range?start=2&end=5
+    start = int(request.args.get('start'))
+    end = int(request.args.get('end'))
+
+    return jsonify(blockchain.to_json()[::-1][start:end])
+
+
+@app.route('/blockchain/length')
+def route_blockchain_length():
+    return jsonify(len(blockchain.chain))
 
 
 @app.route('/blockchain/mine')
@@ -44,6 +60,16 @@ def route_blockchain_mine():
 
     return jsonify(resulting_block.to_json())
 
+@app.route('/known-addresses')
+def route_known_addresses():
+    known_addresses = set()
+
+    for block in blockchain.chain:
+        for transaction in block.data:
+            known_addresses.update(transaction['output'].keys())
+
+    return jsonify(list(known_addresses))
+
 
 @app.route('/wallet/transact', methods=['POST'])
 def route_wallet_transact():
@@ -59,7 +85,7 @@ def route_wallet_transact():
     return jsonify(transaction.to_json())
 
 
-@app.route('/transaction-pool')
+@app.route('/transactions')
 def route_transaction_pool():
     return jsonify(transaction_pool.transaction_data())
 
