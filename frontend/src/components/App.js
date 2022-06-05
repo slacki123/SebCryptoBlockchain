@@ -17,7 +17,8 @@ function App() {
   return (
     <div className="App">
       <img className="logo" src={logo} alt="application-logo" />
-      <h3>Welcome to pychain</h3>
+      <h3>Welcome to SebCoin</h3>
+      <h4>This is your wallet</h4>
       <br />
       <Link to="/blockchain">Blockchain</Link>
       <Link to="/conduct-transaction">Conduct a Transaction</Link>
