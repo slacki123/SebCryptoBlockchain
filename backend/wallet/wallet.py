@@ -1,7 +1,6 @@
 import json
 import uuid
 
-from backend.blockchain.blockchain import Blockchain
 from backend.config import STARTING_BALANCE
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec  # Elliptic curve key value pairing
@@ -16,7 +15,7 @@ class Wallet:
     Keeps track of the miner's balance.
     Allows the miner to authorise transactions via signatures
     """
-    def __init__(self, blockchain: Blockchain = None):
+    def __init__(self, blockchain = None):
         self.blockchain = blockchain
         self.address: str = str(uuid.uuid4())[0:8]  # Get only 8 characters of the UUID
         self.private_key: ec.EllipticCurvePrivateKey = ec.generate_private_key( # same standard as BTC
@@ -75,7 +74,7 @@ class Wallet:
             return False
 
     @staticmethod
-    def calculate_balance(blockchain: Blockchain, address: str):
+    def calculate_balance(blockchain, address: str):
         """
         Calculate the balance of a wallet address, based on the data on the blockchain.
 
