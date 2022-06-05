@@ -28,13 +28,16 @@ def route_blockchain():
 
 @app.route('/blockchain/mine')
 def route_blockchain_mine():
-    transaction_data = 'stubbed_transaction_data'
+    transaction_data = transaction_pool.transaction_data()
 
     # add_block calls the mine method
     blockchain.add_block(transaction_data)
 
     resulting_block = blockchain.chain[-1]
     pubsub.broadcast_block(resulting_block)
+    # After the transaction has been added to the blockchain,
+    # then remove all transactions already on the blockchain from the transaction pool
+    transaction_pool.clear_blockchain_transactions(blockchain)
 
     return jsonify(resulting_block.to_json())
 
@@ -51,6 +54,11 @@ def route_wallet_transact():
 
     pubsub.broadcast_transaction(transaction)
     return jsonify(transaction.to_json())
+
+
+@app.route('/transaction-pool')
+def route_transaction_pool():
+    return jsonify(transaction_pool.transaction_data())
 
 
 ROOT_PORT = 5000

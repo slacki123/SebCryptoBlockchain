@@ -46,7 +46,7 @@ def test_mine_block_when_slow_mining_difficulty_is_too_high_then_difficulty_is_d
 
     # Set a value > 4 for initial difficulty (number of binary preceding zeroes)
     # or it's too easy to get an initial binary value that starts with 000... which won't change difficulty
-    last_block = Block(time.time_ns(), 'test_last_hash', 'test_hash', 'test_data', 4, 0)
+    last_block = Block(time.time_ns(), 'test_last_hash', 'test_hash', 'test_data', 5, 0)
     time.sleep(MINE_RATE / SECONDS)  # sleep for 4 sec
     mined_block = Block.mine_block(last_block, 'somedata2')  # Time to compute the next hash will be very fast
 

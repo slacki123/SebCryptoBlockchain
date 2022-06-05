@@ -7,7 +7,7 @@ GENESIS_DATA = {
     'timestamp': 1,
     'last_hash': 'genesis_last_hash',
     'hash': 'genesis_hash',
-    'data': 'genesis_data',
+    'data': [{'id': 'genesis_id'}],
     'difficulty': 3,
     'nonce': 'genesis_nonce'
 }
