@@ -14,8 +14,8 @@ def test_add_block_adds_new_block_with_expected_data():
     initial_hash = blockchain.chain[0].hash
     assert len(blockchain.chain) == 1
 
-    data = 'test-data'
-    blockchain.add_block([data])
+    data = ['test-data']
+    blockchain.add_block(data)
     last_block = blockchain.chain[-1]
 
     assert len(blockchain.chain) == 2

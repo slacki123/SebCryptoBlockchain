@@ -96,6 +96,8 @@ class Wallet:
                 if transaction['input']['address'] == address:
                     # any time the address conducts any transactions, it resets its balance
                     balance = transaction['output'][address]
+                    # any time the address conducts any transactions, subtract its differences of remaining balances
+                    # balance = balance - (STARTING_BALANCE - transaction['output'][address])
                 elif address in transaction['output']:
                     # If the recipient is receiving an amount, then add it to the balance
                     balance += transaction['output'][address]

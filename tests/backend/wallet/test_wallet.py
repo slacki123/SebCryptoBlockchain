@@ -96,6 +96,14 @@ def test_calculate_wallet_balance_when_sent_amounts_to_multiple_wallets_then_bal
 
     blockchain.add_block([transaction1.to_json(), transaction2.to_json()])
 
+    sent_amount1 = 14
+    transaction1 = Transaction(sending_wallet1, receiving_wallet1.address, sent_amount1)
+
+    sent_amount2 = 16
+    transaction2 = Transaction(sending_wallet1, receiving_wallet2.address, sent_amount2)
+
+    blockchain.add_block([transaction1.to_json(), transaction2.to_json()])
+
     # Sender 1 has an amount deducted based on what was sent to receiver 1 and 2
     assert Wallet.calculate_balance(blockchain, sending_wallet1.address) == STARTING_BALANCE - sent_amount1 - sent_amount2
     # Receiver 1 has amount added

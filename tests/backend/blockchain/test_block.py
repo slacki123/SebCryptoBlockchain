@@ -9,8 +9,8 @@ from backend.util.hex_to_binary import hex_to_binary
 
 def test_mine_block_when_genesis_block_created_then_subsequent_blocks_reference_genesis_block():
     last_block = Block.genesis()
-    data = 'test-data'
-    block = Block.mine_block(last_block, [data])
+    data = ['test-data']
+    block = Block.mine_block(last_block, data)
     assert isinstance(block, Block)
     assert block.data == data
     assert block.last_hash == last_block.hash
@@ -32,7 +32,7 @@ def test_mine_block_when_quick_mining_difficulty_is_too_low_then_difficulty_is_i
 
     # Set a value > 4 for initial difficulty (number of binary preceding zeroes)
     # or it's too easy to get an initial binary value that starts with 000... which won't change difficulty
-    last_block = Block(time.time_ns(), 'test_last_hash', 'test_hash', ['test_data'], 5, 0)
+    last_block = Block(time.time_ns(), 'test_last_hash', 'test_hash', ['test_data'], 6, 0)
     mined_block = Block.mine_block(last_block, ['somedata2'])  # Time to compute the next hash will be very fast
 
     # This sometimes fails because the hex_to_binary takes more than 4 seconds sometimes
