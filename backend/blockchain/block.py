@@ -7,7 +7,7 @@ GENESIS_DATA = {
     'timestamp': 1,
     'last_hash': 'genesis_last_hash',
     'hash': 'genesis_hash',
-    'data': [{'id': 'genesis_id'}],
+    'data': [],
     'difficulty': 3,
     'nonce': 'genesis_nonce'
 }
@@ -18,11 +18,11 @@ class Block:
     Unit of storage.
     Store transactions in a blockchain that supports cryptocurrency
     """
-    def __init__(self, timestamp, last_hash, hash, data, difficulty, nonce):
+    def __init__(self, timestamp, last_hash, hash, data: list, difficulty, nonce):
         self.timestamp = timestamp
         self.last_hash = last_hash
         self.hash = hash
-        self.data = data
+        self.data: list = data
         self.difficulty = difficulty
         self.nonce = nonce
 
@@ -33,7 +33,7 @@ class Block:
         )
 
     @staticmethod
-    def mine_block(last_block, data):
+    def mine_block(last_block, data: list):
         """
         Mine a block based on the given last_block and data. Until a block hash is found that meets
         the leading 0's proof of work requirement

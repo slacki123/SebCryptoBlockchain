@@ -12,7 +12,7 @@ from backend.wallet.wallet import Wallet
 app = Flask(__name__)
 blockchain = Blockchain()  # Does this come from a database? Right now it's all in memory
 transaction_pool = TransactionPool()
-wallet = Wallet()
+wallet = Wallet(blockchain)
 pubsub = PubSub(blockchain, transaction_pool)
 
 
@@ -59,6 +59,11 @@ def route_wallet_transact():
 @app.route('/transaction-pool')
 def route_transaction_pool():
     return jsonify(transaction_pool.transaction_data())
+
+
+@app.route('/wallet/info')
+def route_wallet_info():
+    return jsonify({'address': wallet.address, 'balance': wallet.balance})
 
 
 ROOT_PORT = 5000

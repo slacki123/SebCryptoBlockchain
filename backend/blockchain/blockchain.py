@@ -11,9 +11,9 @@ class Blockchain:
     Implemented as a list of blocks - data sets of transactions
     """
     def __init__(self):
-        self.chain = [Block.genesis()]
+        self.chain: list[Block] = [Block.genesis()]
 
-    def add_block(self, data):
+    def add_block(self, data: list):
         last_block = self.chain[-1]
         self.chain.append(Block.mine_block(last_block, data))
 

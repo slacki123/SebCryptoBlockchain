@@ -1,6 +1,7 @@
 import json
 import uuid
 
+from backend.blockchain.blockchain import Blockchain
 from backend.config import STARTING_BALANCE
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec  # Elliptic curve key value pairing
@@ -15,14 +16,18 @@ class Wallet:
     Keeps track of the miner's balance.
     Allows the miner to authorise transactions via signatures
     """
-    def __init__(self):
+    def __init__(self, blockchain: Blockchain = None):
+        self.blockchain = blockchain
         self.address: str = str(uuid.uuid4())[0:8]  # Get only 8 characters of the UUID
-        self.balance = STARTING_BALANCE
         self.private_key: ec.EllipticCurvePrivateKey = ec.generate_private_key( # same standard as BTC
             ec.SECP256K1(),
             default_backend()
         )  # same standard as BTC
         self.public_key: str = self.serialize_public_key()
+
+    @property
+    def balance(self):
+        return Wallet.calculate_balance(self.blockchain, self.address)
 
     def sign(self, data):
         """
@@ -69,6 +74,33 @@ class Wallet:
         except InvalidSignature as e:
             return False
 
+    @staticmethod
+    def calculate_balance(blockchain: Blockchain, address: str):
+        """
+        Calculate the balance of a wallet address, based on the data on the blockchain.
+
+        The balance is found by adding the output values that belong to the address since the most recent transaction
+        by that address
+        :param blockchain:
+        :param address:
+        :return:
+        """
+        balance = STARTING_BALANCE
+
+        # If blockchain is empty, just return balance
+        if not blockchain:
+            return balance
+
+        for block in blockchain.chain:
+            for transaction in block.data:
+                if transaction['input']['address'] == address:
+                    # any time the address conducts any transactions, it resets its balance
+                    balance = transaction['output'][address]
+                elif address in transaction['output']:
+                    # If the recipient is receiving an amount, then add it to the balance
+                    balance += transaction['output'][address]
+        return balance
+
 
 def main():
     wallet = Wallet()
@@ -83,7 +115,6 @@ def main():
 
     should_be_invalid = wallet.verify(Wallet().public_key, data, signed_data)
     print(f'Should be invalid: {should_be_invalid}')
-
 
 
 if __name__ == '__main__':
