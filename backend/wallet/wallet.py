@@ -1,4 +1,5 @@
 import json
+import os
 import uuid
 
 from backend.config import STARTING_BALANCE
@@ -17,9 +18,10 @@ class Wallet:
     Keeps track of the miner's balance.
     Allows the miner to authorise transactions via signatures
     """
-    def __init__(self, blockchain = None):
+
+    def __init__(self, blockchain=None, private_key=None):
         self.blockchain = blockchain
-        self.private_key: ec.EllipticCurvePrivateKey = ec.generate_private_key( # same standard as BTC
+        self.private_key: ec.EllipticCurvePrivateKey = private_key or ec.generate_private_key( # same standard as BTC
             ec.SECP256K1(),
             default_backend()
         )  # same standard as BTC

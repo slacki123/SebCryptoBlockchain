@@ -9,6 +9,7 @@ from flask_cors import CORS
 from backend.app.localtunnel_app_wrapper import LocalTunnelAppRunner
 from backend.blockchain.blockchain import Blockchain
 from backend.pubsub import PubSub
+from backend.util.retrieve_or_generate_private_key import retrieve_or_create_new_private_key
 from backend.wallet.transaction import Transaction
 from backend.wallet.transaction_pool import TransactionPool
 from backend.wallet.wallet import Wallet
@@ -17,7 +18,8 @@ app = Flask(__name__)
 CORS(app, resources={r'/*': {'origins': 'http://localhost:3000'}})
 blockchain = Blockchain()  # Does this come from a database? Right now it's all in memory
 transaction_pool = TransactionPool()
-wallet = Wallet(blockchain)
+private_key = retrieve_or_create_new_private_key("sebcoin_private_key.txt")
+wallet = Wallet(blockchain, private_key)
 
 
 ROOT_PORT = 5000
