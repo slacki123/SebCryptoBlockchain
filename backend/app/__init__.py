@@ -18,9 +18,26 @@ CORS(app, resources={r'/*': {'origins': 'http://localhost:3000'}})
 blockchain = Blockchain()  # Does this come from a database? Right now it's all in memory
 transaction_pool = TransactionPool()
 wallet = Wallet(blockchain)
-peer_urls = []
-my_url = []
-pubsub = PubSub(blockchain, transaction_pool, peer_urls, my_url)
+
+
+ROOT_PORT = 5000
+PORT = ROOT_PORT
+
+if os.environ.get("PEER"):
+    PORT = random.randint(5001, 6000)
+
+# Use localtunnel to create, save and broadcast your URL, so that new joined peers could use it upon connecting
+# Upon broadcasting, you should receive the URL of other active peers, so that you could download their chain
+local_tunnel_app_runner = LocalTunnelAppRunner(app, PORT)
+local_tunnel_app_runner.run_local_tunnel_on_separate_thread()
+
+# Broadcast new connection, even though the connection might not have been yet connected... :D
+tunnel_url = local_tunnel_app_runner.tunnel_url
+
+# Instantiate pubsub with the tunnel url, blockchain and transaction pool
+pubsub = PubSub(blockchain, transaction_pool, tunnel_url)
+sleep(2)  # wait for localtunnel connection to be done
+pubsub.broadcast_local_address(tunnel_url)
 
 
 @app.route('/')
@@ -98,11 +115,6 @@ def route_peer_share_urls(): # Also sync chain
     return jsonify(blockchain.to_json())
 
 
-@app.route('/peer/get-urls')
-def route_peer_get_urls():
-    return jsonify(peer_urls)
-
-
 @app.route('/wallet/transact', methods=['POST'])
 def route_wallet_transact():
     transaction_data = request.get_json()
@@ -127,22 +139,6 @@ def route_wallet_info():
     return jsonify({'address': wallet.address, 'balance': wallet.balance})
 
 
-ROOT_PORT = 5000
-PORT = ROOT_PORT
-
-if os.environ.get("PEER"):
-    PORT = random.randint(5001, 6000)
-
-# Use localtunnel to create, save and broadcast your URL, so that new joined peers could use it upon connecting
-# Upon broadcasting, you should receive the URL of other active peers, so that you could download their chain
-local_tunnel_app_runner = LocalTunnelAppRunner(app, PORT)
-local_tunnel_app_runner.run_local_tunnel_on_separate_thread()
-
-# Broadcast new connection, even though the connection might not have been yet connected... :D
-tunnel_url = local_tunnel_app_runner.tunnel_url
-my_url.append(tunnel_url)
-sleep(2)  # wait for localtunnel connection to be done
-pubsub.broadcast_local_address(tunnel_url)
-
 # Run the app with the specified port
 local_tunnel_app_runner.run_app()
+

@@ -25,10 +25,9 @@ CHANNELS = {
 
 class Listener(SubscribeCallback):
 
-    def __init__(self, blockchain: Blockchain, transaction_pool: TransactionPool, peer_urls: list, my_url: list):
+    def __init__(self, blockchain: Blockchain, transaction_pool: TransactionPool, my_url: str):
         self.blockchain = blockchain
         self.transaction_pool = transaction_pool
-        self.peer_urls = peer_urls
         self.my_url = my_url
 
     def message(self, pubnub, message_object):
@@ -53,10 +52,9 @@ class Listener(SubscribeCallback):
 
         elif message_object.channel == CHANNELS['LOCAL_ADDRESS']:
             peer_url = message_object.message
-            if peer_url == self.my_url[0]:
+            if peer_url == self.my_url:
                 return
-            self.peer_urls.append(peer_url)
-            requests.post(f'{peer_url}/peer/share-url', json={'peer_url': self.my_url[0]})
+            requests.post(f'{peer_url}/peer/share-url', json={'peer_url': self.my_url})
 
 
 class PubSub:
@@ -65,10 +63,10 @@ class PubSub:
     Provides communication between the nodes in the blockchain network
     """
 
-    def __init__(self, blockchain: Blockchain, transaction_pool: TransactionPool, peer_urls: list, my_url: list):
+    def __init__(self, blockchain: Blockchain, transaction_pool: TransactionPool, my_url: str):
         self.pubnub = PubNub(pnconfig)
         self.pubnub.subscribe().channels(CHANNELS.values()).execute()
-        self.pubnub.add_listener(Listener(blockchain, transaction_pool, peer_urls, my_url))
+        self.pubnub.add_listener(Listener(blockchain, transaction_pool, my_url))
 
     def publish(self, channel, message):
         """
