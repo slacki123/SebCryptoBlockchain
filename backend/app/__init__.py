@@ -1,5 +1,6 @@
 import os
 import random
+from time import sleep
 
 import requests
 from flask import Flask, jsonify, request
@@ -17,7 +18,9 @@ CORS(app, resources={r'/*': {'origins': 'http://localhost:3000'}})
 blockchain = Blockchain()  # Does this come from a database? Right now it's all in memory
 transaction_pool = TransactionPool()
 wallet = Wallet(blockchain)
-pubsub = PubSub(blockchain, transaction_pool)
+peer_urls = []
+my_url = []
+pubsub = PubSub(blockchain, transaction_pool, peer_urls, my_url)
 
 
 @app.route('/')
@@ -62,6 +65,7 @@ def route_blockchain_mine():
 
     return jsonify(resulting_block.to_json())
 
+
 @app.route('/known-addresses')
 def route_known_addresses():
     known_addresses = set()
@@ -71,6 +75,32 @@ def route_known_addresses():
             known_addresses.update(transaction['output'].keys())
 
     return jsonify(list(known_addresses))
+
+
+@app.route('/peer/share-url', methods=['POST'])
+def route_peer_share_urls(): # Also sync chain
+    peer_url = request.get_json()['peer_url']
+    # Sync chain
+    # All peers that are connecting should be able to see the current state of the blockchain
+    result = requests.get(f'{peer_url}/blockchain')
+    print(f'Result blockchain on the main APP node: {result.json()}')
+    result_blockchain = Blockchain.from_json(result.json())
+
+    # The connected peers should be able to replace the existing chain with their own chain on their own machine
+    # Which is contained by the 'Blockchain' instance
+    # As a result, the node that just has connected, should be synchronised with the remaining chains on the network
+    try:
+        blockchain.replace_chain(result_blockchain.chain)
+        print(f'\n -- Successfully synced the new chain')
+    except Exception as e:
+        print(f'\n -- Error synchronising the new chain: {e}')
+
+    return jsonify(blockchain.to_json())
+
+
+@app.route('/peer/get-urls')
+def route_peer_get_urls():
+    return jsonify(peer_urls)
 
 
 @app.route('/wallet/transact', methods=['POST'])
@@ -100,16 +130,25 @@ def route_wallet_info():
 ROOT_PORT = 5000
 PORT = ROOT_PORT
 
-# TODO: Use localtunnel to create, save and broadcast your URL, so that new joined peers could use it upon connecting
-# Upon broadcasting, you should receive the URL of other active peers, so that you could download their chain
-local_tunnel_app_runner = LocalTunnelAppRunner(app, PORT, pubsub)
-local_tunnel_app_runner.run_local_tunnel_on_separate_thread()
-
 if os.environ.get("PEER"):
     PORT = random.randint(5001, 6000)
 
+# Use localtunnel to create, save and broadcast your URL, so that new joined peers could use it upon connecting
+# Upon broadcasting, you should receive the URL of other active peers, so that you could download their chain
+local_tunnel_app_runner = LocalTunnelAppRunner(app, PORT)
+local_tunnel_app_runner.run_local_tunnel_on_separate_thread()
+
+# Broadcast new connection, even though the connection might not have been yet connected... :D
+tunnel_url = local_tunnel_app_runner.tunnel_url
+my_url.append(tunnel_url)
+pubsub.broadcast_local_address(tunnel_url)
+
+sleep(3)  # HACK ALERT: await peer urls to be loaded
+if len(peer_urls) > 0:
+    print(f'PEER URLS: {peer_urls}')
+
     # All peers that are connecting should be able to see the current state of the blockchain
-    result = requests.get(f'https://heavy-jobs-know-212-59-65-241.loca.lt/blockchain')
+    result = requests.get(f'{peer_urls[-1]}/blockchain')
     print(f'Result blockchain on the main APP node: {result.json()}')
     result_blockchain = Blockchain.from_json(result.json())
 
@@ -121,6 +160,7 @@ if os.environ.get("PEER"):
         print(f'\n -- Successfully synced the new chain')
     except Exception as e:
         print(f'\n -- Error synchronising the new chain: {e}')
+
 
 # Run the app with the specified port
 local_tunnel_app_runner.run_app()

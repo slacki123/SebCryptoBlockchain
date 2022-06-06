@@ -1,5 +1,6 @@
 import time
 
+import requests
 from pubnub.pnconfiguration import PNConfiguration
 from pubnub.pubnub import PubNub
 from pubnub.callbacks import SubscribeCallback
@@ -24,9 +25,11 @@ CHANNELS = {
 
 class Listener(SubscribeCallback):
 
-    def __init__(self, blockchain: Blockchain, transaction_pool: TransactionPool):
+    def __init__(self, blockchain: Blockchain, transaction_pool: TransactionPool, peer_urls: list, my_url: list):
         self.blockchain = blockchain
         self.transaction_pool = transaction_pool
+        self.peer_urls = peer_urls
+        self.my_url = my_url
 
     def message(self, pubnub, message_object):
         print(f'\n--Channel: {message_object.channel} | Message: {message_object.message}')
@@ -48,6 +51,12 @@ class Listener(SubscribeCallback):
             transaction = Transaction.from_json(message_object.message)
             self.transaction_pool.set_transaction(transaction)
 
+        elif message_object.channel == CHANNELS['LOCAL_ADDRESS']:
+            peer_url = message_object.message
+            if peer_url == self.my_url[0]:
+                return
+            self.peer_urls.append(peer_url)
+            requests.post(f'{peer_url}/peer/share-url', json={'peer_url': self.my_url[0]})
 
 
 class PubSub:
@@ -56,10 +65,10 @@ class PubSub:
     Provides communication between the nodes in the blockchain network
     """
 
-    def __init__(self, blockchain: Blockchain, transaction_pool: TransactionPool):
+    def __init__(self, blockchain: Blockchain, transaction_pool: TransactionPool, peer_urls: list, my_url: list):
         self.pubnub = PubNub(pnconfig)
         self.pubnub.subscribe().channels(CHANNELS.values()).execute()
-        self.pubnub.add_listener(Listener(blockchain, transaction_pool))
+        self.pubnub.add_listener(Listener(blockchain, transaction_pool, peer_urls, my_url))
 
     def publish(self, channel, message):
         """
