@@ -19,7 +19,7 @@ CHANNELS = {
     'TEST': 'TEST',
     'BLOCK': 'BLOCK',
     'TRANSACTION': 'TRANSACTION',
-    'LOCAL_ADDRESS': 'LOCAL_ADDRESS'
+    'NEW_CONNECTION': 'NEW_CONNECTION'
 }
 
 
@@ -50,11 +50,11 @@ class Listener(SubscribeCallback):
             transaction = Transaction.from_json(message_object.message)
             self.transaction_pool.set_transaction(transaction)
 
-        elif message_object.channel == CHANNELS['LOCAL_ADDRESS']:
+        elif message_object.channel == CHANNELS['NEW_CONNECTION']:
             peer_url = message_object.message
             if peer_url == self.my_url:
                 return
-            requests.post(f'{peer_url}/peer/share-url', json={'peer_url': self.my_url})
+            requests.post(f'{peer_url}/peer/sync-chain', json={'peer_url': self.my_url})
 
 
 class PubSub:
@@ -91,13 +91,13 @@ class PubSub:
         """
         self.publish(CHANNELS['TRANSACTION'], transaction.to_json())
 
-    def broadcast_local_address(self, lt_address):
+    def broadcast_new_connection(self, lt_address):
         """
-        Broadcasts the local tunnel address of the new peer that has connected
+        Broadcasts the new connection of a new joining node
         :param lt_address:
         :return:
         """
-        self.publish(CHANNELS['LOCAL_ADDRESS'], lt_address)
+        self.publish(CHANNELS['NEW_CONNECTION'], lt_address)
 
 
 def main():

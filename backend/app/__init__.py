@@ -37,7 +37,7 @@ tunnel_url = local_tunnel_app_runner.tunnel_url
 # Instantiate pubsub with the tunnel url, blockchain and transaction pool
 pubsub = PubSub(blockchain, transaction_pool, tunnel_url)
 sleep(2)  # wait for localtunnel connection to be done
-pubsub.broadcast_local_address(tunnel_url)
+pubsub.broadcast_new_connection(tunnel_url)
 
 
 @app.route('/')
@@ -94,11 +94,13 @@ def route_known_addresses():
     return jsonify(list(known_addresses))
 
 
-@app.route('/peer/share-url', methods=['POST'])
-def route_peer_share_urls(): # Also sync chain
+# This sync should ever be triggered upon connection
+@app.route('/peer/sync-chain', methods=['POST'])
+def route_peer_sync_chain():
     peer_url = request.get_json()['peer_url']
     # Sync chain
     # All peers that are connecting should be able to see the current state of the blockchain
+    # Get the blockchain of peers upon connecting
     result = requests.get(f'{peer_url}/blockchain')
     print(f'Result blockchain on the main APP node: {result.json()}')
     result_blockchain = Blockchain.from_json(result.json())
