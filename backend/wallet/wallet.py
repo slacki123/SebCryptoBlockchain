@@ -8,6 +8,8 @@ from cryptography.hazmat.primitives.asymmetric.utils import encode_dss_signature
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.exceptions import InvalidSignature
 
+from backend.util.crypto_hash import crypto_hash
+
 
 class Wallet:
     """
@@ -17,12 +19,12 @@ class Wallet:
     """
     def __init__(self, blockchain = None):
         self.blockchain = blockchain
-        self.address: str = str(uuid.uuid4())[0:8]  # Get only 8 characters of the UUID
         self.private_key: ec.EllipticCurvePrivateKey = ec.generate_private_key( # same standard as BTC
             ec.SECP256K1(),
             default_backend()
         )  # same standard as BTC
         self.public_key: str = self.serialize_public_key()
+        self.address: str = crypto_hash(self.serialize_public_key())  # Create the address from the hashed public key
 
     @property
     def balance(self):
