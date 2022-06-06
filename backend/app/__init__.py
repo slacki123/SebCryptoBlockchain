@@ -4,6 +4,8 @@ import random
 import requests
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+
+from backend.app.localtunnel_app_wrapper import LocalTunnelAppRunner
 from backend.blockchain.blockchain import Blockchain
 from backend.pubsub import PubSub
 from backend.wallet.transaction import Transaction
@@ -98,11 +100,16 @@ def route_wallet_info():
 ROOT_PORT = 5000
 PORT = ROOT_PORT
 
+# TODO: Use localtunnel to create, save and broadcast your URL, so that new joined peers could use it upon connecting
+# Upon broadcasting, you should receive the URL of other active peers, so that you could download their chain
+local_tunnel_app_runner = LocalTunnelAppRunner(app, PORT, pubsub)
+local_tunnel_app_runner.run_local_tunnel_on_separate_thread()
+
 if os.environ.get("PEER"):
     PORT = random.randint(5001, 6000)
 
     # All peers that are connecting should be able to see the current state of the blockchain
-    result = requests.get(f'http://localhost:{ROOT_PORT}/blockchain')
+    result = requests.get(f'https://heavy-jobs-know-212-59-65-241.loca.lt/blockchain')
     print(f'Result blockchain on the main APP node: {result.json()}')
     result_blockchain = Blockchain.from_json(result.json())
 
@@ -115,4 +122,5 @@ if os.environ.get("PEER"):
     except Exception as e:
         print(f'\n -- Error synchronising the new chain: {e}')
 
-app.run(port=PORT)
+# Run the app with the specified port
+local_tunnel_app_runner.run_app()

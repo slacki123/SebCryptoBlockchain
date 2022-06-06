@@ -17,7 +17,8 @@ pnconfig.uuid = "someuuidblablablabaoier235digfj"
 CHANNELS = {
     'TEST': 'TEST',
     'BLOCK': 'BLOCK',
-    'TRANSACTION': 'TRANSACTION'
+    'TRANSACTION': 'TRANSACTION',
+    'LOCAL_ADDRESS': 'LOCAL_ADDRESS'
 }
 
 
@@ -82,6 +83,14 @@ class PubSub:
         :return:
         """
         self.publish(CHANNELS['TRANSACTION'], transaction.to_json())
+
+    def broadcast_local_address(self, lt_address):
+        """
+        Broadcasts the local tunnel address of the new peer that has connected
+        :param lt_address:
+        :return:
+        """
+        self.publish(CHANNELS['LOCAL_ADDRESS'], lt_address)
 
 
 def main():
