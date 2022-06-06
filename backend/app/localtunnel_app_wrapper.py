@@ -1,12 +1,9 @@
 import os
-import sys
 import time
 from threading import Thread
 from requests import get
 
 from flask import Flask
-
-from backend.pubsub import PubSub
 
 
 class LocalTunnelAppRunner:
