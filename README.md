@@ -16,21 +16,11 @@ sudo apt install nodejs -y
 ```
 
 
-if using the network as a peer, then get the tunnel connection to port localhost 5000 port of someone else running the node.
-to get secure access to your wider access network, get the tunnel URL
-
+Install localtunnel so that python could use execute the command from within the code
 Run
 ```commandline
 npm install -g localtunnel
 ```
-
-and then the following to return the URL
-```commandline
-lt --port 5000
-```
-
-Go to ./backend/app/__init__.py and ensure that you call the tunnelled URL and replace the existing chain upon connection.
-This will allow the network to run properly
 
 To run the api run
 ```commandline
