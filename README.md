@@ -11,7 +11,8 @@ choco install nodejs 16.13.2
 or on linux
 
 ```shell
-sudo apt-get install nodejs 16.13.2
+curl -s https://deb.nodesource.com/setup_16.x | sudo bash
+sudo apt install nodejs -y
 ```
 
 
