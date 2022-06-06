@@ -144,7 +144,5 @@ my_url.append(tunnel_url)
 sleep(2)  # wait for localtunnel connection to be done
 pubsub.broadcast_local_address(tunnel_url)
 
-sleep(2) # allow all the subscriptions to exchange
-
 # Run the app with the specified port
 local_tunnel_app_runner.run_app()
