@@ -1,3 +1,5 @@
+import json
+
 from backend.blockchain.block import Block
 from backend.config import MINING_REWARD_INPUT
 from backend.wallet.transaction import Transaction
@@ -13,8 +15,11 @@ class Blockchain:
     Public ledger of transactions
     Implemented as a list of blocks - data sets of transactions
     """
-    def __init__(self):
-        self.chain: list[Block] = [Block.genesis()]
+    def __init__(self, local_chain=None, local_blockchain_file_path=None):
+        self.local_blockchain_file_path = local_blockchain_file_path
+        if local_chain:
+            print("Loaded the chain from a local file")
+        self.chain: list[Block] = local_chain or [Block.genesis()]
 
     def add_block(self, data: list):
         last_block = self.chain[-1]
@@ -58,6 +63,10 @@ class Blockchain:
         :return:
         """
         blockchain = Blockchain()
+        if not chain_json:
+            blockchain.chain = None
+            return blockchain
+
         serialised_chain = map(lambda block_json: Block.from_json(block_json), chain_json)
         blockchain.chain = list(serialised_chain)
         return blockchain
@@ -125,6 +134,18 @@ class Blockchain:
 
                 # Finally validate the transaction
                 Transaction.is_valid_transaction(transaction)
+
+    def save_to_file(self):
+        """
+        Saves existing blockchain to a file with the path specified
+        """
+        # write empty file if not exist
+        if not self.local_blockchain_file_path:
+            return
+
+        with open(self.local_blockchain_file_path, 'w') as f:
+            f.write(json.dumps(self.to_json()))
+
 
 
 

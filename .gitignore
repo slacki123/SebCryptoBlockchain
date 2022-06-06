@@ -5,3 +5,4 @@ __pycache__
 package-lock.json
 node_modules
 sebcoin_private_key.txt
+local_blockchain.txt

@@ -10,14 +10,21 @@ from backend.app.localtunnel_app_wrapper import LocalTunnelAppRunner
 from backend.blockchain.blockchain import Blockchain
 from backend.pubsub import PubSub
 from backend.util.retrieve_or_generate_private_key import retrieve_or_create_new_private_key
+from backend.util.try_retrieve_local_blockchain import try_retrieve_local_blockchain
 from backend.wallet.transaction import Transaction
 from backend.wallet.transaction_pool import TransactionPool
 from backend.wallet.wallet import Wallet
 
 app = Flask(__name__)
 CORS(app, resources={r'/*': {'origins': 'http://localhost:3000'}})
-blockchain = Blockchain()  # Does this come from a database? Right now it's all in memory
+
+# Get blockchain
+existing_blockchain_path = "local_blockchain.txt"
+local_blockchain = try_retrieve_local_blockchain(existing_blockchain_path)
+blockchain = Blockchain(local_blockchain.chain, existing_blockchain_path)
 transaction_pool = TransactionPool()
+
+# Get wallet
 private_key = retrieve_or_create_new_private_key("sebcoin_private_key.txt")
 wallet = Wallet(blockchain, private_key)
 
@@ -104,6 +111,8 @@ def route_peer_sync_chain():
     # All peers that are connecting should be able to see the current state of the blockchain
     # Get the blockchain of peers upon connecting
     result = requests.get(f'{peer_url}/blockchain')
+    if not result.ok:
+        return jsonify(result.json()) # return if the response is a failure
     print(f'Result blockchain on the main APP node: {result.json()}')
     result_blockchain = Blockchain.from_json(result.json())
 
@@ -112,6 +121,7 @@ def route_peer_sync_chain():
     # As a result, the node that just has connected, should be synchronised with the remaining chains on the network
     try:
         blockchain.replace_chain(result_blockchain.chain)
+        blockchain.save_to_file()
         print(f'\n -- Successfully synced the new chain')
     except Exception as e:
         print(f'\n -- Error synchronising the new chain: {e}')
