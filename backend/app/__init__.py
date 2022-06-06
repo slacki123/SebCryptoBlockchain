@@ -141,26 +141,10 @@ local_tunnel_app_runner.run_local_tunnel_on_separate_thread()
 # Broadcast new connection, even though the connection might not have been yet connected... :D
 tunnel_url = local_tunnel_app_runner.tunnel_url
 my_url.append(tunnel_url)
+sleep(2)  # wait for localtunnel connection to be done
 pubsub.broadcast_local_address(tunnel_url)
 
-sleep(3)  # HACK ALERT: await peer urls to be loaded
-if len(peer_urls) > 0:
-    print(f'PEER URLS: {peer_urls}')
-
-    # All peers that are connecting should be able to see the current state of the blockchain
-    result = requests.get(f'{peer_urls[-1]}/blockchain')
-    print(f'Result blockchain on the main APP node: {result.json()}')
-    result_blockchain = Blockchain.from_json(result.json())
-
-    # The connected peers should be able to replace the existing chain with their own chain on their own machine
-    # Which is contained by the 'Blockchain' instance
-    # As a result, the node that just has connected, should be synchronised with the remaining chains on the network
-    try:
-        blockchain.replace_chain(result_blockchain.chain)
-        print(f'\n -- Successfully synced the new chain')
-    except Exception as e:
-        print(f'\n -- Error synchronising the new chain: {e}')
-
+sleep(2) # allow all the subscriptions to exchange
 
 # Run the app with the specified port
 local_tunnel_app_runner.run_app()
